@@ -5,7 +5,6 @@ import {
 } from '@angular/core';
 
 import { ControlWidget } from '../../widget';
-import { NumberProperty } from '../../model/numberproperty';
 
 @Component({
   selector: 'sf-integer-widget',
@@ -23,16 +22,21 @@ import { NumberProperty } from '../../model/numberproperty';
 </div>`
 })
 export class IntegerWidget extends ControlWidget {
-  formProperty: NumberProperty;
   private _displayValue: string;
   @ViewChild('input') element: ElementRef;
 
   ngAfterViewInit() {
     const control = this.control;
     this.formProperty.valueChanges.subscribe((newValue) => {
-      // Ignore the model value, use the display value instead
-      if (control.value !== this._displayValue) {
-        control.setValue(this._displayValue, {emitEvent: false});
+      if (typeof this._displayValue !== 'undefined') {
+        // Ignore the model value, use the display value instead
+        if (control.value !== this._displayValue) {
+          control.setValue(this._displayValue, {emitEvent: false});
+        }
+      } else {
+        if (control.value !== newValue) {
+          control.setValue(newValue, {emitEvent: false});
+        }
       }
     });
     this.formProperty.errorsChanges.subscribe((errors) => {
@@ -48,6 +52,7 @@ export class IntegerWidget extends ControlWidget {
       // Store a copy of the original string value
       this._displayValue = newValue;
       this.formProperty.setValue(newValue, false);
+      delete this._displayValue;
       if (newValue === '' && (<HTMLInputElement>this.element.nativeElement).validity.badInput) {
         // Show a custom error if the number is invalid
         this.formProperty.extendErrors([{
